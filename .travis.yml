@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jole1783/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true jole1783/react-test npm test
+
+after_success:
+  - docker build -t jole1783/multi-client ./client
+  - docker build -t jole1783/multi-nginx ./nginx
+  - docker build -t jole1783/multi-server ./server
+  - docker build -t jole1783/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push jole1783/multi-client
+  - docker push jole1783/multi-nginx
+  - docker push jole1783/multi-server
+  - docker push jole1783/multi-worker
